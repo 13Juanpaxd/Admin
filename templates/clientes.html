@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h1 class="text-center mb-5 text-primary font-weight-bold">Lista de Clientes</h1>
+
+    <div class="card shadow-lg mb-5">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="font-weight-bold">Agregar Cliente</h3>
+        </div>
+        <div class="card-body bg-light p-4">
+            <form method="POST" action="{{ url_for('clientes') }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nombre" class="font-weight-bold">Nombre:</label>
+                            <input type="text" class="form-control rounded-pill" id="nombre" name="nombre" placeholder="Ingrese el nombre" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="telefono" class="font-weight-bold">Teléfono:</label>
+                            <input type="tel" class="form-control rounded-pill" id="telefono" name="telefono" placeholder="Ingrese el teléfono" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cedula" class="font-weight-bold">Cédula:</label>
+                            <input type="text" class="form-control rounded-pill" id="cedula" name="cedula" placeholder="Ingrese la cédula" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="correo" class="font-weight-bold">Correo:</label>
+                            <input type="email" class="form-control rounded-pill" id="correo" name="correo" placeholder="Ingrese el correo" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="pais" class="font-weight-bold">País:</label>
+                            <input type="text" class="form-control rounded-pill" id="pais" name="pais" placeholder="Ingrese el país" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="provincia" class="font-weight-bold">Provincia:</label>
+                            <input type="text" class="form-control rounded-pill" id="provincia" name="provincia" placeholder="Ingrese la provincia" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="canton" class="font-weight-bold">Cantón:</label>
+                            <input type="text" class="form-control rounded-pill" id="canton" name="canton" placeholder="Ingrese el cantón" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="distrito" class="font-weight-bold">Distrito:</label>
+                            <input type="text" class="form-control rounded-pill" id="distrito" name="distrito" placeholder="Ingrese el distrito" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Agregar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-secondary text-white text-center">
+            <h3 class="font-weight-bold">Clientes Registrados</h3>
+        </div>
+        <div class="card-body p-4">
+            <table class="table table-hover table-striped table-bordered text-center">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID Cliente</th>
+                        <th>Nombre</th>
+                        <th>Teléfono</th>
+                        <th>Cédula</th>
+                        <th>Correo</th>
+                        <th>País</th>
+                        <th>Provincia</th>
+                        <th>Cantón</th>
+                        <th>Distrito</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
+                        <td>{{ row[6] }}</td>
+                        <td>{{ row[7] }}</td>
+                        <td>{{ row[8] }}</td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if row[9] == 1 else 'danger' }} p-2">
+                                {{ 'Activo' if row[9] == 1 else 'Inactivo' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

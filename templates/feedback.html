@@ -1,0 +1,31 @@
+<div class="container mt-4">
+    <h2>Feedback para el Producto {{ producto_id }}</h2>
+
+    <!-- Listado de feedbacks -->
+    {% if feedbacks %}
+        <ul class="list-group mb-4">
+            {% for comentario, fecha, cliente in feedbacks %}
+                <li class="list-group-item">
+                    <strong>{{ cliente }}</strong>
+                    <p>{{ comentario }}</p>
+                    <small class="text-muted">{{ fecha }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">No hay feedback para este producto.</p>
+    {% endif %}
+
+    <!-- Formulario para agregar feedback -->
+    <form method="POST" action="{{ url_for('agregar_feedback', producto_id=producto_id) }}">
+        <div class="form-group">
+            <label for="cliente_id">Cliente ID</label>
+            <input type="number" class="form-control" id="cliente_id" name="cliente_id" required>
+        </div>
+        <div class="form-group">
+            <label for="comentario">Comentario</label>
+            <textarea class="form-control" id="comentario" name="comentario" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar Feedback</button>
+    </form>
+</div>

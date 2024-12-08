@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+ 
+{% block title %}Inventario - Tu Tienda{% endblock %}
+ 
+{% block content %}
+
+<div class="container my-4">
+    <h1 class="text-center mb-5 text-primary font-weight-bold">Gestión de Inventario</h1>
+Productos Registrados
+    <!-- Formulario para añadir productos -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="font-weight-bold">Añadir Producto</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre" class="form-label">Nombre del producto</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del producto" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="precio" class="form-label">Precio</label>
+                        <input type="number" step="0.01" class="form-control" id="precio" name="precio" placeholder="₡0.00" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="detalle" class="form-label">Detalle</label>
+                        <input type="text" class="form-control" id="detalle" name="detalle" placeholder="Detalles del producto" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cantidad" class="form-label">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad" name="cantidad" placeholder="Cantidad disponible" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="categoria" class="form-label">Categoría</label>
+                        <input type="text" class="form-control" id="categoria" name="categoria" placeholder="Categoría" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="proveedor_id" class="form-label">ID del Proveedor</label>
+                        <input type="number" class="form-control" id="proveedor_id" name="proveedor_id" placeholder="ID del Proveedor" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="casillero_id" class="form-label">ID del Casillero</label>
+                        <input type="number" class="form-control" id="casillero_id" name="casillero_id" placeholder="ID del Casillero" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="imagen" class="form-label">Imagen del Producto</label>
+                        <input type="file" class="form-control" id="imagen" name="imagen" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Añadir Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aqui esta Listado de productos -->
+    <div class="card-header bg-primary text-white text-center">
+        <h3 class="font-weight-bold">Productos Registrados</h3>
+    </div>
+        <div class="card-body">
+            <div class="row">
+                {% for producto in productos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="{{ url_for('imagen', producto_id=producto[0]) }}" class="card-img-top" alt="{{ producto[1] }}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ producto[1] }}</h5>
+                            <p class="card-text">{{ producto[4] }}</p>
+                            <p class="card-text"><strong>Precio:</strong> ₡{{ producto[3] }}</p>
+                            <p class="card-text"><strong>Cantidad:</strong> {{ producto[5] }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

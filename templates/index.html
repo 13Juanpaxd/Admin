@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-4">Panel de Administración</h1>
+    <p class="text-center">Bienvenido al Panel de Administración de Tu Tienda. Selecciona una opción para gestionar los recursos.</p>
+    <hr>
+    <div class="row mt-4">
+        <!-- Carta de Inventario -->
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('inventario') }}" class="text-decoration-none text-dark">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-boxes fa-3x mb-3 text-primary"></i>
+                        <h5 class="card-title">Inventario</h5>
+                        <p class="card-text">Gestiona los productos disponibles en la tienda.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Carta de Clientes -->
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('clientes') }}" class="text-decoration-none text-dark">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title">Clientes</h5>
+                        <p class="card-text">Consulta y administra la información de los clientes.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Carta de Proveedores -->
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('proveedores') }}" class="text-decoration-none text-dark">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-truck fa-3x mb-3 text-warning"></i>
+                        <h5 class="card-title">Proveedores</h5>
+                        <p class="card-text">Administra a los proveedores y sus productos.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
