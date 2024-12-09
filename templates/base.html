@@ -19,7 +19,7 @@
 
         /* Header */
         header {
-            background: linear-gradient(45deg, #2617ac, #0d86b7);
+            background: linear-gradient(45deg, #6ebedb, #e853b9);
             color: rgb(0, 0, 0);
             padding: 20px 0;
             box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1);
@@ -47,7 +47,7 @@
         }
 
         .nav-link {
-            color: white;
+            color: rgb(0, 0, 0);
             font-size: 1.2rem;
             font-weight: bold;
             text-transform: uppercase;
@@ -57,7 +57,7 @@
 
         .nav-link i {
             margin-right: 8px;
-            color: #ffffff; /* Color personalizado para los íconos */
+            color: #000000; /* Color personalizado para los íconos */
         }
 
         .nav-link:hover {
@@ -67,7 +67,7 @@
         }
 
         footer {
-            background: linear-gradient(45deg,#2617ac, #0d86b7);
+            background: linear-gradient(45deg,#6ebedb, #e853b9);
             color: rgb(255, 255, 255);
             text-align: center;
             padding: 20px 0;
@@ -105,18 +105,24 @@
         position: relative;
         top: 0;
         left: 0;
-        padding-left: 600px;
+        padding-left: 35%;
     }
     .logo {
         height: 50px;
-        margin-right: 10px;
+        margin-right: 5px;
         border-radius: 50%;
     }
 </style>
 <header class="text-center py-4">
     <div class="d-flex justify-content-start align-items-center logo-container">
         <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="logo">
-        <h1>FRIKILAND</h1>
+        <h1 style="
+        color: white;
+        font-family: 'Poppins', sans-serif;
+        font-size: 3rem;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        text-align: center;">ROPAS CLARAS</h1>
     </div>
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
@@ -179,13 +185,34 @@
     </main>
 
     <footer class="footer">
-        <div class="container d-flex justify-content-between align-items-start py-4">
-         
-            <div class="left-section text-left">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center py-4">
+            <style>
+                .text-white a:hover {
+                    text-decoration: underline;
+                }
+    
+                .fab, .fas {
+                    font-size: 1.5rem; /* Tamaño de los íconos */
+                }
+    
+                .me-2 {
+                    margin-right: 0.5rem; /* Espaciado derecho */
+                }
+    
+                .left-section, .right-section {
+                    text-align: center;
+                }
+    
+                .left-section ul, .right-section ul {
+                    list-style: none;
+                    padding: 0;
+                }
+            </style>
+            <div class="left-section mb-3 mb-md-0">
                 <p class="mb-2">¡Síguenos en nuestras redes sociales!</p>
                 <ul class="list-inline mb-2">
                     <li class="list-inline-item">
-                        <a href="https://www.facebook.com/profile.php?id=61565799606598" target="_blank" class="text-white">
+                        <a href="https://www.facebook.com/groups/694622972212540/" target="_blank" class="text-white me-2">
                             <i class="fab fa-facebook"></i>
                         </a>
                     </li>
@@ -195,10 +222,10 @@
                         </a>
                     </li>
                 </ul>
-                <p>&copy; 2024 Tu Tienda. Todos los derechos reservados.</p>
+                <p>&copy; 2024 ROPAS CLARAS. Todos los derechos reservados.</p>
             </div>
-   
-            <div class="right-section text-left">
+    
+            <div class="right-section">
                 <h5 class="mb-2">Atención al Cliente</h5>
                 <p class="mb-2">¿Necesitas ayuda? Contáctanos por:</p>
                 <ul class="list-inline mb-0">

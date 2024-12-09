@@ -9,8 +9,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def get_db_connection():
     connection = cx_Oracle.connect(
-        user='ProyectoDefinitivo',
-        password='ProyectoDefinitivo',
+        user='FIDE_ROPASCLARAS',
+        password='12345',
         dsn='localhost:1521/XE',
         encoding='UTF-8'
     )
@@ -62,10 +62,10 @@ def register():
         telefono = request.form['telefono']
         cedula = request.form['cedula']
         correo = request.form['correo']
-        pais = request.form['pais']
-        provincia = request.form['provincia']
-        canton = request.form['canton']
-        distrito = request.form['distrito']
+        pais = int(request.form['pais'])  # Asegúrate de convertir a entero
+        provincia = int(request.form['provincia'])  # Asegúrate de convertir a entero
+        canton = int(request.form['canton'])  # Asegúrate de convertir a entero
+        distrito = int(request.form['distrito'])  # Asegúrate de convertir a entero
         foto = request.files['foto']
         foto_blob = foto.read()
         
@@ -92,6 +92,7 @@ def register():
         flash('Usuario registrado exitosamente. Ahora puede iniciar sesión.')
         return redirect(url_for('login'))
     return render_template('register.html')
+
 
 @app.route('/logout')
 def logout():
@@ -183,9 +184,11 @@ def user_photo(user_id):
 def inventario():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
         if request.method == 'POST':
             nombre = request.form['nombre']
             precio = request.form['precio']
@@ -196,14 +199,14 @@ def inventario():
             casillero_id = request.form['casillero_id']
             imagen = request.files['imagen']
             imagen_blob = imagen.read()
- 
+
             print("Datos recibidos para insertar:")
-            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id}, Casillero ID: {casillero_id}, Imagen: {len(imagen_blob)} bytes")
- 
+            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id},Imagen: {len(imagen_blob)} bytes")
+
             cursor.execute("""
                 INSERT INTO FIDE_INVENTARIO_TB
-                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Casillero_ID, Fecha_Entrada)
-                VALUES (:nombre, :imagen_blob, :precio, :detalle, :cantidad, :categoria, :proveedor_id, :casillero_id, SYSTIMESTAMP)
+                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID,  Fecha_Entrada)
+                VALUES (:nombre, :imagen_blob, :precio, :detalle, :cantidad, :categoria, :proveedor_id, SYSTIMESTAMP)
             """, {
                 'nombre': nombre,
                 'imagen_blob': imagen_blob,
@@ -212,20 +215,26 @@ def inventario():
                 'cantidad': cantidad,
                 'categoria': categoria,
                 'proveedor_id': proveedor_id,
-                'casillero_id': casillero_id
             })
             conn.commit()
             print("Producto insertado correctamente")
-        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Casillero_ID, Estado_ID, Fecha_Entrada FROM FIDE_INVENTARIO_TB')
+        
+        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Estado_ID, Fecha_Entrada FROM FIDE_INVENTARIO_TB')
         productos = cursor.fetchall()
         print("Productos obtenidos:", productos)
+        
         return render_template('inventario.html', productos=productos)
+    
     except Exception as e:
         print("Error en la operación:", str(e))
+        return render_template('inventario.html', productos=[], error=str(e))
+    
     finally:
-        cursor.close()
-        conn.close()
- 
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 @app.route('/imagen/<int:producto_id>')
 def imagen(producto_id):
     conn = get_db_connection()
@@ -251,8 +260,10 @@ def imagen(producto_id):
 def clientes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     conn = get_db_connection()
     cursor = conn.cursor()
+    
     if request.method == 'POST':
         nombre = request.form['nombre']
         telefono = request.form['telefono']
@@ -262,30 +273,47 @@ def clientes():
         provincia = request.form['provincia']
         canton = request.form['canton']
         distrito = request.form['distrito']
-        cursor.execute("""
-            INSERT INTO FIDE_CLIENTES_TB 
-            (Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID)
-            VALUES (:nombre, :telefono, :cedula, :correo, :pais, :provincia, :canton, :distrito, 1)
-        """, {
-            'nombre': nombre,
-            'telefono': telefono,
-            'cedula': cedula,
-            'correo': correo,
-            'pais': pais,
-            'provincia': provincia,
-            'canton': canton,
-            'distrito': distrito
-        })
-        conn.commit()
-        cursor.close()
-        conn.close()
+        
+        try:
+            cursor.execute("""
+                INSERT INTO FIDE_CLIENTES_TB 
+                (Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID)
+                VALUES (:nombre, :telefono, :cedula, :correo, :pais, :provincia, :canton, :distrito, 1)
+            """, {
+                'nombre': nombre,
+                'telefono': telefono,
+                'cedula': cedula,
+                'correo': correo,
+                'pais': pais,
+                'provincia': provincia,
+                'canton': canton,
+                'distrito': distrito
+            })
+            conn.commit()
+        except cx_Oracle.DatabaseError as e:
+            error, = e.args
+            print(f"Error al insertar datos: {error.message}")
+            conn.rollback()
+        finally:
+            cursor.close()
+            conn.close()
+        
         return redirect(url_for('clientes'))
 
-    cursor.execute('SELECT ID_Cliente, Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID FROM FIDE_CLIENTES_TB')
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute('SELECT ID_Cliente, Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID FROM FIDE_CLIENTES_TB')
+        rows = cursor.fetchall()
+    except cx_Oracle.DatabaseError as e:
+        error, = e.args
+        print(f"Error al recuperar datos: {error.message}")
+        rows = []
+    finally:
+        cursor.close()
+        conn.close()
+
     return render_template('clientes.html', rows=rows)
+
+
 
 @app.route('/proveedores', methods=['GET', 'POST'])
 def proveedores():
