@@ -11,7 +11,7 @@ def get_db_connection():
     connection = cx_Oracle.connect(
         user='FIDE_ROPASCLARAS',
         password='12345',
-        dsn='localhost:1521/XE',
+        dsn='localhost:1521/xepdb1',
         encoding='UTF-8'
     )
     return connection
@@ -427,24 +427,28 @@ def carrito():
             producto_id = request.form['producto_id']
             cantidad = request.form['cantidad']
             user_id = session['user_id']
+            estado_id = 1  # Estado por defecto
+            subtotal = 0  # Calcula el subtotal según tu lógica
 
             cursor.execute("""
-                INSERT INTO FIDE_CARRITO_TB 
-                (ID_Cliente, ID_Producto, Cantidad) 
-                VALUES (:user_id, :producto_id, :cantidad)
+                INSERT INTO FIDE_CARRITO_TEMP_TB 
+                (Cliente_ID, Producto_ID, Cantidad, Subtotal, Estado_ID) 
+                VALUES (:user_id, :producto_id, :cantidad, :subtotal, :estado_id)
             """, {
                 'user_id': user_id,
                 'producto_id': producto_id,
-                'cantidad': cantidad
+                'cantidad': cantidad,
+                'subtotal': subtotal,
+                'estado_id': estado_id
             })
             conn.commit()
-            flash('Producto añadido al carrito.', 'success')
+            flash('Producto añadido al carrito temporal.', 'success')
 
         cursor.execute("""
-            SELECT c.ID_Producto, i.Nombre, c.Cantidad, i.Precio, (c.Cantidad * i.Precio) AS Total
-            FROM FIDE_CARRITO_TB c
-            JOIN FIDE_INVENTARIO_TB i ON c.ID_Producto = i.ID_Producto
-            WHERE c.ID_Cliente = :user_id
+            SELECT c.Producto_ID, i.Nombre, c.Cantidad, i.Precio, (c.Cantidad * i.Precio) AS Total
+            FROM FIDE_CARRITO_TEMP_TB c
+            JOIN FIDE_INVENTARIO_TB i ON c.Producto_ID = i.ID_Producto
+            WHERE c.Cliente_ID = :user_id
         """, {'user_id': session['user_id']})
         carrito = cursor.fetchall()
 
@@ -461,6 +465,7 @@ def carrito():
             cursor.close()
         if conn:
             conn.close()
+
 
 @app.route('/catalogo', methods=['GET'])
 def catalogo():
@@ -685,3 +690,36 @@ def agregar_a_favoritos(producto_id):
     return redirect(url_for('catalogo'))
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/vaciar_carrito', methods=['POST'])
+def vaciar_carrito():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        user_id = session['user_id']
+
+        # Eliminar todos los productos del carrito temporal del usuario actual
+        cursor.execute("""
+            DELETE FROM FIDE_CARRITO_TEMP_TB 
+            WHERE Cliente_ID = :user_id
+        """, {'user_id': user_id})
+        conn.commit()
+        flash('Carrito vaciado con éxito.', 'success')
+
+        return redirect(url_for('carrito'))
+
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('Ocurrió un error al vaciar el carrito.', 'error')
+        return redirect(url_for('carrito'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
