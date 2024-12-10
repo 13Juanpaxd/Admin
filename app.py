@@ -9,24 +9,23 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def get_db_connection():
     connection = cx_Oracle.connect(
-        user='ProyectoDefinitivo',
-        password='ProyectoDefinitivo',
-        dsn='localhost:1521/XE',
+        user='FIDE_ROPASCLARAS',
+        password='12345',
+        dsn='localhost:1521/xe',
         encoding='UTF-8'
     )
     return connection
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-
     if request.method == 'POST':
         correo = request.form['correo']
         cedula = request.form['cedula']
 
         if correo == 'ADMIN@ADMIN.AD' and cedula == '987654321':
-            session['user_id'] = 1  
+            session['user_id'] = 1
             session['is_admin'] = True
-            return redirect(url_for('index'))  
+            return redirect(url_for('index'))
 
         else:
             conn = get_db_connection()
@@ -39,15 +38,38 @@ def login():
             if user:
                 session['user_id'] = user[0]
                 session['is_admin'] = False
-                return redirect(url_for('home'))  
+                return redirect(url_for('home'))
 
             else:
                 flash('Correo o cédula incorrectos. Inténtelo de nuevo.')
 
     return render_template('login.html')
+
 @app.route('/home')
 def home():
-    return render_template('home.html')
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad FROM FIDE_INVENTARIO_TB')
+        productos = cursor.fetchall()
+        
+        return render_template('home.html', productos=productos)
+    
+    except Exception as e:
+        print(f"Error al cargar productos: {e}")
+        return render_template('home.html', productos=[], error=str(e))
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
 
 @app.route('/index')
 def index():
@@ -62,10 +84,10 @@ def register():
         telefono = request.form['telefono']
         cedula = request.form['cedula']
         correo = request.form['correo']
-        pais = request.form['pais']
-        provincia = request.form['provincia']
-        canton = request.form['canton']
-        distrito = request.form['distrito']
+        pais = int(request.form['pais'])  # Asegúrate de convertir a entero
+        provincia = int(request.form['provincia'])  # Asegúrate de convertir a entero
+        canton = int(request.form['canton'])  # Asegúrate de convertir a entero
+        distrito = int(request.form['distrito'])  # Asegúrate de convertir a entero
         foto = request.files['foto']
         foto_blob = foto.read()
         
@@ -92,6 +114,7 @@ def register():
         flash('Usuario registrado exitosamente. Ahora puede iniciar sesión.')
         return redirect(url_for('login'))
     return render_template('register.html')
+
 
 @app.route('/logout')
 def logout():
@@ -163,7 +186,8 @@ def profile():
     cursor.close()
     conn.close()
     
-    return render_template('profile.html', user_info=user_info)
+    return render_template('profile.html', user_info=user_info) 
+
 
 @app.route('/user_photo/<int:user_id>')
 def user_photo(user_id):
@@ -183,9 +207,11 @@ def user_photo(user_id):
 def inventario():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
         if request.method == 'POST':
             nombre = request.form['nombre']
             precio = request.form['precio']
@@ -196,14 +222,14 @@ def inventario():
             casillero_id = request.form['casillero_id']
             imagen = request.files['imagen']
             imagen_blob = imagen.read()
- 
+
             print("Datos recibidos para insertar:")
-            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id}, Casillero ID: {casillero_id}, Imagen: {len(imagen_blob)} bytes")
- 
+            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id},Imagen: {len(imagen_blob)} bytes")
+
             cursor.execute("""
                 INSERT INTO FIDE_INVENTARIO_TB
-                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Casillero_ID, Fecha_Entrada)
-                VALUES (:nombre, :imagen_blob, :precio, :detalle, :cantidad, :categoria, :proveedor_id, :casillero_id, SYSTIMESTAMP)
+                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID,  Fecha_Entrada)
+                VALUES (:nombre, :imagen_blob, :precio, :detalle, :cantidad, :categoria, :proveedor_id, SYSTIMESTAMP)
             """, {
                 'nombre': nombre,
                 'imagen_blob': imagen_blob,
@@ -212,20 +238,26 @@ def inventario():
                 'cantidad': cantidad,
                 'categoria': categoria,
                 'proveedor_id': proveedor_id,
-                'casillero_id': casillero_id
             })
             conn.commit()
             print("Producto insertado correctamente")
-        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Casillero_ID, Estado_ID, Fecha_Entrada FROM FIDE_INVENTARIO_TB')
+        
+        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Estado_ID, Fecha_Entrada FROM FIDE_INVENTARIO_TB')
         productos = cursor.fetchall()
         print("Productos obtenidos:", productos)
+        
         return render_template('inventario.html', productos=productos)
+    
     except Exception as e:
         print("Error en la operación:", str(e))
+        return render_template('inventario.html', productos=[], error=str(e))
+    
     finally:
-        cursor.close()
-        conn.close()
- 
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 @app.route('/imagen/<int:producto_id>')
 def imagen(producto_id):
     conn = get_db_connection()
@@ -251,8 +283,10 @@ def imagen(producto_id):
 def clientes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     conn = get_db_connection()
     cursor = conn.cursor()
+    
     if request.method == 'POST':
         nombre = request.form['nombre']
         telefono = request.form['telefono']
@@ -262,30 +296,47 @@ def clientes():
         provincia = request.form['provincia']
         canton = request.form['canton']
         distrito = request.form['distrito']
-        cursor.execute("""
-            INSERT INTO FIDE_CLIENTES_TB 
-            (Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID)
-            VALUES (:nombre, :telefono, :cedula, :correo, :pais, :provincia, :canton, :distrito, 1)
-        """, {
-            'nombre': nombre,
-            'telefono': telefono,
-            'cedula': cedula,
-            'correo': correo,
-            'pais': pais,
-            'provincia': provincia,
-            'canton': canton,
-            'distrito': distrito
-        })
-        conn.commit()
-        cursor.close()
-        conn.close()
+        
+        try:
+            cursor.execute("""
+                INSERT INTO FIDE_CLIENTES_TB 
+                (Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID)
+                VALUES (:nombre, :telefono, :cedula, :correo, :pais, :provincia, :canton, :distrito, 1)
+            """, {
+                'nombre': nombre,
+                'telefono': telefono,
+                'cedula': cedula,
+                'correo': correo,
+                'pais': pais,
+                'provincia': provincia,
+                'canton': canton,
+                'distrito': distrito
+            })
+            conn.commit()
+        except cx_Oracle.DatabaseError as e:
+            error, = e.args
+            print(f"Error al insertar datos: {error.message}")
+            conn.rollback()
+        finally:
+            cursor.close()
+            conn.close()
+        
         return redirect(url_for('clientes'))
 
-    cursor.execute('SELECT ID_Cliente, Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID FROM FIDE_CLIENTES_TB')
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute('SELECT ID_Cliente, Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID FROM FIDE_CLIENTES_TB')
+        rows = cursor.fetchall()
+    except cx_Oracle.DatabaseError as e:
+        error, = e.args
+        print(f"Error al recuperar datos: {error.message}")
+        rows = []
+    finally:
+        cursor.close()
+        conn.close()
+
     return render_template('clientes.html', rows=rows)
+
+
 
 @app.route('/proveedores', methods=['GET', 'POST'])
 def proveedores():
@@ -337,120 +388,60 @@ def facturas():
 
     return render_template('facturas.html') 
 
-@app.route('/encargos', methods=['GET', 'POST'])
-def encargos():
+
+@app.route('/catalogo', methods=['GET', 'POST'])
+def catalogo():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        if request.method == 'POST':
-            producto_id = request.form['producto']
-            cliente_id = session['user_id']
-            plazo = request.form['cantidad']
-            
-            cursor.execute("""
-                INSERT INTO FIDE_ENCARGOS_TB 
-                (Producto_ID, Cliente_ID, Plazo, Fecha_Inicial, Fecha_Limite) 
-                VALUES (:producto_id, :cliente_id, :plazo, SYSTIMESTAMP, SYSTIMESTAMP + NUMTODSINTERVAL(:plazo, 'DAY'))
-            """, {
-                'producto_id': producto_id,
-                'cliente_id': cliente_id,
-                'plazo': plazo
-            })
-            conn.commit()
-            flash('Encargo realizado con éxito.', 'success')
-
-        cursor.execute("""
-            SELECT Producto_ID, Plazo, TO_CHAR(Fecha_Inicial, 'YYYY-MM-DD'), TO_CHAR(Fecha_Limite, 'YYYY-MM-DD') 
-            FROM FIDE_ENCARGOS_TB 
-            WHERE Cliente_ID = :cliente_id
-        """, {'cliente_id': session['user_id']})
-        encargos = cursor.fetchall()
-
-        return render_template('encargos.html', encargos=encargos)
-
-    except Exception as e:
-        print(f"Error: {e}")
-        flash('Ocurrió un error al procesar la solicitud.', 'error')
-        return render_template('encargos.html', encargos=[])
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
     
-
-@app.route('/carrito', methods=['GET', 'POST'])
-def carrito():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))  
-    conn = None
-    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
         if request.method == 'POST':
+            comentario = request.form['comentario']
             producto_id = request.form['producto_id']
-            cantidad = request.form['cantidad']
-            user_id = session['user_id']
+            cliente_id = session['user_id']
 
             cursor.execute("""
-                INSERT INTO FIDE_CARRITO_TB 
-                (ID_Cliente, ID_Producto, Cantidad) 
-                VALUES (:user_id, :producto_id, :cantidad)
+                INSERT INTO FIDE_FEEDBACK_TB (Cliente_ID, Producto_ID, Comentario, Estado_ID)
+                VALUES (:cliente_id, :producto_id, :comentario, 1)
             """, {
-                'user_id': user_id,
+                'cliente_id': cliente_id,
                 'producto_id': producto_id,
-                'cantidad': cantidad
+                'comentario': comentario
             })
             conn.commit()
-            flash('Producto añadido al carrito.', 'success')
-
+            flash('Comentario agregado con éxito.', 'success')
+        
+        # Obtener productos con sus últimos tres comentarios
         cursor.execute("""
-            SELECT c.ID_Producto, i.Nombre, c.Cantidad, i.Precio, (c.Cantidad * i.Precio) AS Total
-            FROM FIDE_CARRITO_TB c
-            JOIN FIDE_INVENTARIO_TB i ON c.ID_Producto = i.ID_Producto
-            WHERE c.ID_Cliente = :user_id
-        """, {'user_id': session['user_id']})
-        carrito = cursor.fetchall()
-
-        total = sum(item[4] for item in carrito)
-
-        return render_template('carrito.html', carrito=carrito, total=total)
-
-    except Exception as e:
-        print(f"Error: {e}")
-        flash('Ocurrió un error al procesar la solicitud.', 'error')
-        return render_template('carrito.html', carrito=[], total=0)
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-@app.route('/catalogo', methods=['GET'])
-def catalogo():
-    """
-    Muestra el catálogo de productos desde la base de datos.
-    """
-    if 'user_id' not in session:
-        return redirect(url_for('login'))  
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT ID_Producto, Nombre, Imagen, Precio, Detalle, Cantidad FROM FIDE_INVENTARIO_TB')
+            SELECT p.ID_Producto, p.Nombre, p.Imagen, p.Precio, p.Detalle, p.Cantidad,
+                   f.ID_Feedback, f.Comentario, c.Nombre AS Cliente_Nombre
+            FROM FIDE_INVENTARIO_TB p
+            LEFT JOIN FIDE_FEEDBACK_TB f ON p.ID_Producto = f.Producto_ID
+            LEFT JOIN FIDE_CLIENTES_TB c ON f.Cliente_ID = c.ID_Cliente
+            ORDER BY p.ID_Producto, f.FECHA_CREACION DESC
+        """)
         productos = cursor.fetchall()
+        print("Productos obtenidos:", productos)  # Línea de impresión para depuración
 
-        return render_template('catalogo.html', productos=productos)
+        # Organizar los comentarios de productos
+        productos_dict = {}
+        for producto in productos:
+            producto_id = producto[0]
+            if producto_id not in productos_dict:
+                productos_dict[producto_id] = {
+                    'info': producto[:6],
+                    'comentarios': []
+                }
+            if producto[6]:  # ID_Feedback es diferente de None
+                productos_dict[producto_id]['comentarios'].append({
+                    'Cliente_Nombre': producto[8],
+                    'Comentario': producto[7]
+                })
+
+        return render_template('catalogo.html', productos=list(productos_dict.values()))
 
     except Exception as e:
         print(f"Error al cargar el catálogo: {e}")
@@ -461,43 +452,8 @@ def catalogo():
             cursor.close()
         if conn:
             conn.close()
-            
 
-@app.route('/add_to_favoritos', methods=['POST'])
-def add_to_favoritos():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Debe iniciar sesión para agregar a favoritos'}), 403
-    
-    try:
-        producto_id = request.form.get('producto_id')
-        user_id = session['user_id']
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT 1 FROM FIDE_FAVORITOS_TB 
-            WHERE ID_Cliente = :user_id AND ID_Producto = :producto_id
-        """, {'user_id': user_id, 'producto_id': producto_id})
-        
-        if cursor.fetchone():
-            return jsonify({'error': 'El producto ya está en favoritos'}), 400
-        
-        cursor.execute("""
-            INSERT INTO FIDE_FAVORITOS_TB (ID_Cliente, ID_Producto) 
-            VALUES (:user_id, :producto_id)
-        """, {'user_id': user_id, 'producto_id': producto_id})
-        
-        conn.commit()
-        return jsonify({'success': 'Producto agregado a favoritos'})
-    
-    except Exception as e:
-        print(f"Error al agregar a favoritos: {e}")
-        return jsonify({'error': 'Error interno'}), 500
-    
-    finally:
-        cursor.close()
-        conn.close()
+
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
@@ -546,63 +502,6 @@ def feedback(producto_id):
     conn.close()
     return render_template('feedback.html', feedbacks=feedbacks, producto_id=producto_id)
 
-@app.route('/favoritos', methods=['GET'])
-def favoritos():
-    if 'user_id' not in session:
-        return redirect(url_for('login')) 
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        
-        user_id = session['user_id']
-        cursor.execute("""
-            SELECT f.Producto_ID, i.Nombre, i.Precio, i.Detalle
-            FROM FIDE_FAVORITO_TB f
-            JOIN FIDE_INVENTARIO_TB i ON f.Producto_ID = i.ID_Producto
-            WHERE f.Cliente_ID = :user_id
-        """, {'user_id': user_id})
-        favoritos = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-    return render_template('favoritos.html', favoritos=favoritos)
-
-@app.route('/agregar_favorito/<int:producto_id>', methods=['POST'])
-def agregar_favorito(producto_id):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))  
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        user_id = session['user_id']
-
-        cursor.execute("""
-            SELECT COUNT(*) 
-            FROM FIDE_FAVORITOS_TB 
-            WHERE ID_Cliente = :user_id AND ID_Producto = :producto_id
-        """, {'user_id': user_id, 'producto_id': producto_id})
-        count = cursor.fetchone()[0]
-
-        if count == 0:
-            
-            cursor.execute("""
-                INSERT INTO FIDE_FAVORITOS_TB (ID_Cliente, ID_Producto)
-                VALUES (:user_id, :producto_id)
-            """, {'user_id': user_id, 'producto_id': producto_id})
-            conn.commit()
-            flash('Producto agregado a favoritos.', 'success')
-        else:
-            flash('Este producto ya está en tu lista de favoritos.', 'info')
-    finally:
-        cursor.close()
-        conn.close()
-
-    return redirect(url_for('catalogo'))
 
 @app.route('/proveedores', methods=['GET', 'POST'])
 def proveedores_view():
@@ -620,12 +519,6 @@ def proveedores_view():
         return redirect(url_for('proveedores_view'))
     
     return render_template('proveedores.html', proveedores=proveedores)
-
-
-@app.route('/carrito')
-def carrito_page():
-    total = sum(item['precio'] * item['cantidad'] for item in carrito)
-    return render_template('carrito.html', carrito=carrito, total=total)
 
 @app.route('/facturar', methods=['POST'])
 def facturar():
@@ -646,14 +539,140 @@ def facturar():
     return render_template('factura.html', factura=factura, total=total)
 
 
-@app.route('/agregar_al_carrito/<int:producto_id>')
+
+@app.route('/carrito', methods=['GET', 'POST'])
+def carrito():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if request.method == 'POST':
+            producto_id = request.form['producto_id']
+            cantidad = request.form['cantidad']
+            user_id = session['user_id']
+            estado_id = 1  
+            subtotal = 0  
+
+            cursor.execute("""
+                INSERT INTO FIDE_CARRITO_TEMP_TB 
+                (Cliente_ID, Producto_ID, Cantidad, Subtotal, Estado_ID) 
+                VALUES (:user_id, :producto_id, :cantidad, :subtotal, :estado_id)
+            """, {
+                'user_id': user_id,
+                'producto_id': producto_id,
+                'cantidad': cantidad,
+                'subtotal': subtotal,
+                'estado_id': estado_id
+            })
+            conn.commit()
+            flash('Producto añadido al carrito temporal.', 'success')
+
+        cursor.execute("""
+            SELECT c.Producto_ID, i.Nombre, c.Cantidad, i.Precio, (c.Cantidad * i.Precio) AS Total
+            FROM FIDE_CARRITO_TEMP_TB c
+            JOIN FIDE_INVENTARIO_TB i ON c.Producto_ID = i.ID_Producto
+            WHERE c.Cliente_ID = :user_id
+        """, {'user_id': session['user_id']})
+        carrito = cursor.fetchall()
+
+        total = sum(item[4] for item in carrito)
+
+        return render_template('carrito.html', carrito=carrito, total=total)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('Ocurrió un error al procesar la solicitud.', 'error')
+        return render_template('carrito.html', carrito=[], total=0)
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@app.route('/carrito')
+def carrito_page():
+    total = sum(item['precio'] * item['cantidad'] for item in carrito)
+    return render_template('carrito.html', carrito=carrito, total=total)
+
+
+@app.route('/agregar_al_carrito/<int:producto_id>', methods=['POST'])
 def agregar_al_carrito(producto_id):
-    
-    return redirect(url_for('catalogo'))
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
 
-@app.route('/agregar_a_favoritos/<int:producto_id>')
-def agregar_a_favoritos(producto_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    return redirect(url_for('catalogo'))
+        user_id = session['user_id']
+        cantidad = int(request.form.get('cantidad', 1))
+        estado_id = 1
+        subtotal = 0
+
+        cursor.execute("""
+            INSERT INTO FIDE_CARRITO_TEMP_TB 
+            (Cliente_ID, Producto_ID, Cantidad, Subtotal, Estado_ID) 
+            VALUES (:user_id, :producto_id, :cantidad, :subtotal, :estado_id)
+        """, {
+            'user_id': user_id,
+            'producto_id': producto_id,
+            'cantidad': cantidad,
+            'subtotal': subtotal,
+            'estado_id': estado_id
+        })
+        conn.commit()
+        flash('Producto añadido al carrito temporal.', 'success')
+
+    except Exception as e:
+        print(f"Error al agregar producto al carrito: {e}")
+        flash('Ocurrió un error al agregar el producto al carrito.', 'error')
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return redirect(url_for('home'))
+
+
+
+@app.route('/vaciar_carrito', methods=['POST'])
+def vaciar_carrito():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        user_id = session['user_id']
+
+        # Eliminar todos los productos del carrito temporal del usuario actual
+        cursor.execute("""
+            DELETE FROM FIDE_CARRITO_TEMP_TB 
+            WHERE Cliente_ID = :user_id
+        """, {'user_id': user_id})
+        conn.commit()
+        flash('Carrito vaciado con éxito.', 'success')
+
+        return redirect(url_for('carrito'))
+
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('Ocurrió un error al vaciar el carrito.', 'error')
+        return redirect(url_for('carrito'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
