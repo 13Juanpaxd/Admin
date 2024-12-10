@@ -195,12 +195,12 @@
                 <tr>
                     <td>{{ producto[1] }}</td>
                     <td>₡{{ producto[3] }}</td>
-                    <td>{{ producto[4] }}</td>
-                    <td>₡{{ producto[3] * producto[4] }}</td>
+                    <td>{{ producto[2] }}</td>
+                    <td>₡{{ producto[4] }}</td>
                     <!-- Campos ocultos para enviar los datos del carrito -->
                     <input type="hidden" name="productos[]" value="{{ producto[1] }}">
                     <input type="hidden" name="precios[]" value="{{ producto[3] }}">
-                    <input type="hidden" name="cantidades[]" value="{{ producto[4] }}">
+                    <input type="hidden" name="cantidades[]" value="{{ producto[2] }}">
                 </tr>
                 {% endfor %}
                 {% else %}
@@ -221,12 +221,15 @@
                     <i class="fas fa-receipt"></i> Facturar
                 </button>
             </form>
-            <a href="{{ url_for('vaciar_carrito') }}" class="btn btn-danger btn-lg">
+            <a href="#" onclick="event.preventDefault(); document.getElementById('vaciar-carrito-form').submit();" class="btn btn-danger btn-lg">
                 <i class="fas fa-trash-alt"></i> Vaciar Carrito
             </a>
+            <form id="vaciar-carrito-form" method="POST" action="{{ url_for('vaciar_carrito') }}" style="display: none;"></form>
         </div>
         {% endif %}
     </main>
+    
+    
 
 
 
@@ -269,7 +272,7 @@
                         </a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="https://www.instagram.com/frikilandplus?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                        <a href="https://www.instagram.com/__streetwearfly/"
                             target="_blank" class="text-white">
                             <i class="fab fa-instagram"></i>
                         </a>

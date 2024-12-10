@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-<<<<<<< HEAD
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,96 +121,6 @@
             }
         </style>
     </head>
-=======
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Facturas - Tu Tienda{% endblock %}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        main {
-            flex: 1;
-        }
-
-        header {
-            background: linear-gradient(45deg, #7d74ce, #7fe396);
-            color: white;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-
-        nav a {
-            font-size: 1rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        nav a:hover {
-            color: #f4a261;
-            text-decoration: none;
-        }
-
-        .btn-primary, .btn-secondary {
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: #f4a261;
-            border-color: #f4a261;
-        }
-
-        .btn-secondary:hover {
-            background-color: #457b9d;
-            border-color: #457b9d;
-        }
-
-        footer {
-            background: linear-gradient(45deg,#7d74ce, #7fe396);
-            color: white;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        footer ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            padding: 0;
-        }
-
-        footer ul li {
-            margin: 0 15px;
-        }
-
-        footer ul li a {
-            color: white;
-            font-size: 1.2rem;
-            transition: color 0.3s;
-        }
-
-        footer ul li a:hover {
-            color: #f4a261;
-        }
-
-        footer p {
-            margin: 10px 0;
-        }
-    </style>
-</head>
->>>>>>> d65b6c7468d15742ea5072e7ad9dee6723d3f701
 <style>
     .logo-container {
         position: relative;
@@ -269,9 +178,7 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="container mt-4">
-        {% block content %}
         <div class="text-center">
             <h2>Facturas</h2>
         </div>
@@ -296,9 +203,7 @@
                         <td>{{ factura[2] }}</td>
                         <td>₡{{ factura[3] }}</td>
                         <td>
-                            <span class="badge {% if factura[4] == 'Pagado' %}badge-success{% else %}badge-danger{% endif %}">
-                                {{ factura[4] }}
-                            </span>
+                            <span class="badge badge-success">Pagado</span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -309,8 +214,9 @@
                 {% endif %}
             </tbody>
         </table>
-        {% endblock %}
     </main>
+    
+    
     
     <footer class="footer">
         <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center py-4">
@@ -345,7 +251,7 @@
                         </a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="https://www.instagram.com/frikilandplus?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="text-white">
+                        <a href="https://www.instagram.com/__streetwearfly/" target="_blank" class="text-white">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </li>

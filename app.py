@@ -11,7 +11,7 @@ def get_db_connection():
     connection = cx_Oracle.connect(
         user='FIDE_ROPASCLARAS',
         password='12345',
-        dsn='localhost:1521/xepdb1',
+        dsn='localhost:1521/xe',
         encoding='UTF-8'
     )
     return connection
@@ -219,16 +219,16 @@ def inventario():
             cantidad = request.form['cantidad']
             categoria = request.form['categoria']
             proveedor_id = request.form['proveedor_id']
-            casillero_id = request.form['casillero_id']
+            # Elimina el casillero_id ya que no está presente en el formulario
             imagen = request.files['imagen']
             imagen_blob = imagen.read()
 
             print("Datos recibidos para insertar:")
-            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id},Imagen: {len(imagen_blob)} bytes")
+            print(f"Nombre: {nombre}, Precio: {precio}, Detalle: {detalle}, Cantidad: {cantidad}, Categoría: {categoria}, Proveedor ID: {proveedor_id}, Imagen: {len(imagen_blob)} bytes")
 
             cursor.execute("""
                 INSERT INTO FIDE_INVENTARIO_TB
-                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID,  Fecha_Entrada)
+                (Nombre, Imagen, Precio, Detalle, Cantidad, Categoria, Proveedor_ID, Fecha_Entrada)
                 VALUES (:nombre, :imagen_blob, :precio, :detalle, :cantidad, :categoria, :proveedor_id, SYSTIMESTAMP)
             """, {
                 'nombre': nombre,
@@ -258,6 +258,7 @@ def inventario():
         if conn:
             conn.close()
 
+
 @app.route('/imagen/<int:producto_id>')
 def imagen(producto_id):
     conn = get_db_connection()
@@ -283,10 +284,10 @@ def imagen(producto_id):
 def clientes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     if request.method == 'POST':
         nombre = request.form['nombre']
         telefono = request.form['telefono']
@@ -296,7 +297,10 @@ def clientes():
         provincia = request.form['provincia']
         canton = request.form['canton']
         distrito = request.form['distrito']
-        
+
+        print("Datos recibidos para insertar cliente:")
+        print(f"Nombre: {nombre}, Teléfono: {telefono}, Cédula: {cedula}, Correo: {correo}, País: {pais}, Provincia: {provincia}, Cantón: {canton}, Distrito: {distrito}")
+
         try:
             cursor.execute("""
                 INSERT INTO FIDE_CLIENTES_TB 
@@ -313,6 +317,7 @@ def clientes():
                 'distrito': distrito
             })
             conn.commit()
+            print("Cliente insertado correctamente")
         except cx_Oracle.DatabaseError as e:
             error, = e.args
             print(f"Error al insertar datos: {error.message}")
@@ -320,12 +325,13 @@ def clientes():
         finally:
             cursor.close()
             conn.close()
-        
+
         return redirect(url_for('clientes'))
 
     try:
         cursor.execute('SELECT ID_Cliente, Nombre, Telefono, Cedula, Correo, Pais, Provincia, Canton, Distrito, Estado_ID FROM FIDE_CLIENTES_TB')
         rows = cursor.fetchall()
+        print("Clientes obtenidos:", rows)
     except cx_Oracle.DatabaseError as e:
         error, = e.args
         print(f"Error al recuperar datos: {error.message}")
@@ -525,8 +531,6 @@ def facturar():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    conn = None
-    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -536,46 +540,69 @@ def facturar():
         
         # Obtener los productos del carrito temporal
         cursor.execute("""
-            SELECT Producto_ID, Cantidad, Subtotal, Estado_ID, Cliente_ID, CREADO_POR, FECHA_CREACION, MODIFICADO_POR, FECHA_MODIFICACION, ESTADO, ACCION
+            SELECT Producto_ID, Cantidad
             FROM FIDE_CARRITO_TEMP_TB WHERE Cliente_ID = :user_id
         """, {'user_id': user_id})
         carrito_temp = cursor.fetchall()
         print(f"Carrito Temporal: {carrito_temp}")
 
-        # Generar un ID único para cada inserción en FIDE_CARRITO_TB
-        cursor.execute("SELECT MAX(ID_CARRITO) FROM FIDE_CARRITO_TB")
-        max_id = cursor.fetchone()[0] or 0
-        new_id = max_id + 1
-
-        # Insertar los datos en la tabla FIDE_CARRITO_TB
+        # Obtener los detalles de cada producto y calcular el subtotal
+        total = 0
         for item in carrito_temp:
+            producto_id = item[0]
+            cantidad = item[1]
+            cursor.execute("SELECT Precio FROM FIDE_INVENTARIO_TB WHERE ID_Producto = :producto_id", {'producto_id': producto_id})
+            precio = cursor.fetchone()[0]
+            subtotal = precio * cantidad
+            total += subtotal
+            
+            # Insertar los datos en la tabla FIDE_CARRITO_TB
             cursor.execute("""
                 INSERT INTO FIDE_CARRITO_TB 
-                (ID_CARRITO, Producto_ID, Cantidad, Subtotal, Estado_ID, Cliente_ID, CREADO_POR, FECHA_CREACION, MODIFICADO_POR, FECHA_MODIFICACION, ESTADO, ACCION) 
-                VALUES (:ID_CARRITO, :Producto_ID, :Cantidad, :Subtotal, :Estado_ID, :Cliente_ID, :CREADO_POR, :FECHA_CREACION, :MODIFICADO_POR, :FECHA_MODIFICACION, :ESTADO, :ACCION)
+                (ID_CARRITO, Producto_ID, Cantidad, Subtotal, Cliente_ID) 
+                VALUES (:ID_CARRITO, :Producto_ID, :Cantidad, :Subtotal, :Cliente_ID)
             """, {
-                'ID_CARRITO': new_id,
-                'Producto_ID': item[0],
-                'Cantidad': item[1],
-                'Subtotal': item[2],
-                'Estado_ID': item[3],
-                'Cliente_ID': item[4],
-                'CREADO_POR': item[5],
-                'FECHA_CREACION': item[6],
-                'MODIFICADO_POR': item[7],
-                'FECHA_MODIFICACION': item[8],
-                'ESTADO': item[9],
-                'ACCION': item[10]
+                'ID_CARRITO': producto_id,
+                'Producto_ID': producto_id,
+                'Cantidad': cantidad,
+                'Subtotal': subtotal,
+                'Cliente_ID': user_id
             })
-            new_id += 1
-        print("Datos transferidos a FIDE_CARRITO_TB")
+
+        IVA = total * 0.13  # Supongamos que el IVA es del 13%
+        Costo_Envio = 1500
+        Subtotal = total + IVA
+        Total = Subtotal + Costo_Envio
+
+        # Generar un ID único para la factura
+        cursor.execute("SELECT MAX(ID_Factura) FROM FIDE_FACTURA_TB")
+        max_id = cursor.fetchone()[0] or 0
+        new_factura_id = max_id + 1
+        
+        # Insertar los datos en la tabla FIDE_FACTURA_TB
+        cursor.execute("""
+            INSERT INTO FIDE_FACTURA_TB 
+            (ID_Factura, Cliente_ID, Metodo_ID, Detalle, TotalDeLineas, Total, Subtotal, IVA, Costo_Envio, Carrito_ID)
+            VALUES (:ID_Factura, :Cliente_ID, :Metodo_ID, :Detalle, :TotalDeLineas, :Total, :Subtotal, :IVA, :Costo_Envio, :Carrito_ID)
+        """, {
+            'ID_Factura': new_factura_id,
+            'Cliente_ID': user_id,
+            'Metodo_ID': 1,  # Asignar un valor aleatorio para el método de pago
+            'Detalle': 'Compra de productos',
+            'TotalDeLineas': len(carrito_temp),
+            'Total': Total,
+            'Subtotal': Subtotal,
+            'IVA': IVA,
+            'Costo_Envio': Costo_Envio,
+            'Carrito_ID': new_factura_id  # Usar el ID de factura como ID de carrito
+        })
 
         # Vaciar la tabla FIDE_CARRITO_TEMP_TB para el Cliente_ID correspondiente
         cursor.execute("""
             DELETE FROM FIDE_CARRITO_TEMP_TB WHERE Cliente_ID = :user_id
         """, {'user_id': user_id})
         conn.commit()
-        print("Carrito temporal vaciado")
+        print("Carrito temporal vaciado y factura generada")
         
         flash('Factura generada y carrito vaciado con éxito.', 'success')
         return redirect(url_for('facturas'))
@@ -589,6 +616,7 @@ def facturar():
             cursor.close()
         if conn:
             conn.close()
+
 
 
 
@@ -664,7 +692,11 @@ def agregar_al_carrito(producto_id):
         user_id = session['user_id']
         cantidad = int(request.form.get('cantidad', 1))
         estado_id = 1
-        subtotal = 0
+
+        # Obtener el precio del producto
+        cursor.execute("SELECT Precio FROM FIDE_INVENTARIO_TB WHERE ID_Producto = :producto_id", {'producto_id': producto_id})
+        precio = cursor.fetchone()[0]
+        subtotal = precio * cantidad
 
         cursor.execute("""
             INSERT INTO FIDE_CARRITO_TEMP_TB 

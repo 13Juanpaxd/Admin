@@ -191,7 +191,7 @@
                             <p class="card-text">{{ producto['info'][4] }}</p>
                             <p class="card-text"><strong>Precio:</strong> ₡{{ producto['info'][3] }}</p>
                             <p class="card-text"><strong>Cantidad:</strong> {{ producto['info'][5] }}</p>
-                            
+    
                             <!-- Formulario para agregar comentarios -->
                             <form method="post" action="{{ url_for('catalogo') }}">
                                 <input type="hidden" name="producto_id" value="{{ producto['info'][0] }}">
@@ -215,10 +215,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 {% endfor %}
             </div>
         </div>
     </main>
+    
     
     
     
@@ -255,7 +257,7 @@
                         </a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="https://www.instagram.com/frikilandplus?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="text-white">
+                        <a href="https://www.instagram.com/__streetwearfly/" target="_blank" class="text-white">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </li>

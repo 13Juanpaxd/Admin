@@ -183,10 +183,13 @@
                             <p class="card-text">{{ producto[4] }}</p>
                             <p class="card-text"><strong>Precio:</strong> ₡{{ producto[3] }}</p>
                             <p class="card-text"><strong>Cantidad:</strong> {{ producto[5] }}</p>
+    
+                            <!-- Formulario para agregar productos al carrito en catalogo.html -->
                             <form method="post" action="{{ url_for('agregar_al_carrito', producto_id=producto[0]) }}">
                                 <input type="hidden" name="cantidad" value="1">
-                                <button type="submit" class="btn btn-primary btn-block">Agregar al Carrito</button>
+                                <button type="submit" class="btn btn-primary btn-block mt-2">Agregar al Carrito</button>
                             </form>
+    
                         </div>
                     </div>
                 </div>
@@ -194,6 +197,7 @@
             </div>
         </div>
     </main>
+    
     
     
     
@@ -231,7 +235,7 @@
                         </a>
                     </li>
                     <li class="list-inline-item">
-                        <a href="https://www.instagram.com/frikilandplus?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="text-white">
+                        <a href="https://www.instagram.com/__streetwearfly/" target="_blank" class="text-white">
                             <i class="fab fa-instagram"></i>
                         </a>
                     </li>
