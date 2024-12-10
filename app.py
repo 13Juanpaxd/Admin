@@ -11,7 +11,7 @@ def get_db_connection():
     connection = cx_Oracle.connect(
         user='FIDE_ROPASCLARAS',
         password='12345',
-        dsn='localhost:1521/xe',
+        dsn='localhost:1521/xepdb1',
         encoding='UTF-8'
     )
     return connection
@@ -522,21 +522,73 @@ def proveedores_view():
 
 @app.route('/facturar', methods=['POST'])
 def facturar():
-    productos = request.form.getlist('productos[]')
-    precios = request.form.getlist('precios[]')
-    cantidades = request.form.getlist('cantidades[]')
-    total = request.form.get('total')
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
 
-    factura = []
-    for i in range(len(productos)):
-        factura.append({
-            'producto': productos[i],
-            'precio': precios[i],
-            'cantidad': cantidades[i],
-            'subtotal': int(precios[i]) * int(cantidades[i])
-        })
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        user_id = session['user_id']
+        print(f"User ID: {user_id}")
+        
+        # Obtener los productos del carrito temporal
+        cursor.execute("""
+            SELECT Producto_ID, Cantidad, Subtotal, Estado_ID, Cliente_ID, CREADO_POR, FECHA_CREACION, MODIFICADO_POR, FECHA_MODIFICACION, ESTADO, ACCION
+            FROM FIDE_CARRITO_TEMP_TB WHERE Cliente_ID = :user_id
+        """, {'user_id': user_id})
+        carrito_temp = cursor.fetchall()
+        print(f"Carrito Temporal: {carrito_temp}")
 
-    return render_template('factura.html', factura=factura, total=total)
+        # Generar un ID único para cada inserción en FIDE_CARRITO_TB
+        cursor.execute("SELECT MAX(ID_CARRITO) FROM FIDE_CARRITO_TB")
+        max_id = cursor.fetchone()[0] or 0
+        new_id = max_id + 1
+
+        # Insertar los datos en la tabla FIDE_CARRITO_TB
+        for item in carrito_temp:
+            cursor.execute("""
+                INSERT INTO FIDE_CARRITO_TB 
+                (ID_CARRITO, Producto_ID, Cantidad, Subtotal, Estado_ID, Cliente_ID, CREADO_POR, FECHA_CREACION, MODIFICADO_POR, FECHA_MODIFICACION, ESTADO, ACCION) 
+                VALUES (:ID_CARRITO, :Producto_ID, :Cantidad, :Subtotal, :Estado_ID, :Cliente_ID, :CREADO_POR, :FECHA_CREACION, :MODIFICADO_POR, :FECHA_MODIFICACION, :ESTADO, :ACCION)
+            """, {
+                'ID_CARRITO': new_id,
+                'Producto_ID': item[0],
+                'Cantidad': item[1],
+                'Subtotal': item[2],
+                'Estado_ID': item[3],
+                'Cliente_ID': item[4],
+                'CREADO_POR': item[5],
+                'FECHA_CREACION': item[6],
+                'MODIFICADO_POR': item[7],
+                'FECHA_MODIFICACION': item[8],
+                'ESTADO': item[9],
+                'ACCION': item[10]
+            })
+            new_id += 1
+        print("Datos transferidos a FIDE_CARRITO_TB")
+
+        # Vaciar la tabla FIDE_CARRITO_TEMP_TB para el Cliente_ID correspondiente
+        cursor.execute("""
+            DELETE FROM FIDE_CARRITO_TEMP_TB WHERE Cliente_ID = :user_id
+        """, {'user_id': user_id})
+        conn.commit()
+        print("Carrito temporal vaciado")
+        
+        flash('Factura generada y carrito vaciado con éxito.', 'success')
+        return redirect(url_for('facturas'))
+
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('Ocurrió un error al generar la factura.', 'error')
+        return redirect(url_for('carrito'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container">
-    <h2>Registrar nuevo usuario</h2>
+    <h2 class="text-center mb-4">Registrar nuevo usuario</h2>
     <form method="post" action="{{ url_for('register') }}" enctype="multipart/form-data">
         <div class="form-group">
             <label for="nombre">Nombre</label>
@@ -54,7 +54,10 @@
             <label for="foto">Foto</label>
             <input type="file" class="form-control" id="foto" name="foto" required>
         </div>
-        <button type="submit" class="btn btn-primary">Registrar</button>
-    </form>
+        <div class="text-center mt-4">
+        <button type="submit" class="btn btn-lg px-5 rounded-pill shadow" style="background-color: #a989e3; color: white;">Registrar</button>
+    </div>
+</form>
 </div>
+
 {% endblock %}
