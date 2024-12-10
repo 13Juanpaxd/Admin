@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<<<<<<< HEAD
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,6 +122,96 @@
             }
         </style>
     </head>
+=======
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Facturas - Tu Tienda{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        header {
+            background: linear-gradient(45deg, #7d74ce, #7fe396);
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        nav a {
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        nav a:hover {
+            color: #f4a261;
+            text-decoration: none;
+        }
+
+        .btn-primary, .btn-secondary {
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #f4a261;
+            border-color: #f4a261;
+        }
+
+        .btn-secondary:hover {
+            background-color: #457b9d;
+            border-color: #457b9d;
+        }
+
+        footer {
+            background: linear-gradient(45deg,#7d74ce, #7fe396);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        footer ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+        }
+
+        footer ul li {
+            margin: 0 15px;
+        }
+
+        footer ul li a {
+            color: white;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+
+        footer ul li a:hover {
+            color: #f4a261;
+        }
+
+        footer p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+>>>>>>> d65b6c7468d15742ea5072e7ad9dee6723d3f701
 <style>
     .logo-container {
         position: relative;
@@ -137,11 +228,11 @@
 <header class="text-center py-4">
     <div class="d-flex justify-content-start align-items-center logo-container">
         <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo" class="logo">
-        <h1>FRIKILAND</h1>
+        <h1>Ropas Claras</h1>
     </div>
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="{{ url_for('catalogo') }}">Inicio</a>
+                <a class="navbar-brand" href="{{ url_for('home') }}">Inicio</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
