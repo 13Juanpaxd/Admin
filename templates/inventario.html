@@ -5,11 +5,12 @@
 {% block content %}
 
 <div class="container my-4">
-    <h1 class="text-center mb-5 text-primary font-weight-bold">Gestión de Inventario</h1>
-Productos Registrados
+    <h1 class="text-center mb-4" style="color: black;">Gestión de Inventario</h1>
+
+
     <!-- Formulario para añadir productos -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white text-center">
+        <div class="card-header text-white text-center" style="background-color: #a989e3; color: white;">
             <h3 class="font-weight-bold">Añadir Producto</h3>
         </div>
         <div class="card-body">
@@ -50,14 +51,15 @@ Productos Registrados
                         <input type="file" class="form-control" id="imagen" name="imagen" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Añadir Producto</button>
+                <div class="text-center mt-4">
+                <button type="submit" class="btn btn-lg px-5 rounded-pill shadow" style="background-color: #a989e3; color: white;">Añadir Producto</button>
             </form>
         </div>
     </div>
 
     <!-- Aqui esta Listado de productos -->
-    <div class="card-header bg-primary text-white text-center">
-        <h3 class="font-weight-bold">Productos Registrados</h3>
+    <div class="card-header text-white text-center" style="background-color: #a989e3; color: white;">
+        <h3 class="font-weight-bold" >Productos Registrados</h3>
     </div>
         <div class="card-body">
             <div class="row">
